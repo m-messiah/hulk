@@ -157,8 +157,9 @@ string choice(string *array, unsigned length) {
 
 
 size_t string_write(void *contents, size_t size, size_t nmemb, void *userp) {
-    ((string*)userp)->append((char*)contents, size * nmemb);
-    return size * nmemb;
+    //((string*)userp)->append((char*)contents, size * nmemb);
+    //return size * nmemb;
+    return 1;
 }
 
 string buildblock() {
@@ -187,12 +188,13 @@ unsigned httpcall(const string& url) {
     headerlist = curl_slist_append(headerlist, "Connection:keep-alive"); 
     if(curl) {    
         if(CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, request.str().c_str()))
-        //&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, string_write))
+        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, string_write))
         //&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, encoding.c_str()))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_REFERER, referer.str().c_str()))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_USERAGENT, choice(headers_useragents, 110).c_str()))
+        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist))) {
             try {
                 code = curl_easy_perform(curl); 

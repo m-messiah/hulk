@@ -1,7 +1,7 @@
 .PHONY: build
 
 CC=g++
-CFLAGS=-std=c++11 -Wall -g
+CFLAGS=-std=c++11 -Wall -O3
 LDFLAGS=-lpthread -lcurl
 
 build: hulk.cpp Makefile
