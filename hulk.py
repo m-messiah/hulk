@@ -17,7 +17,7 @@ else:
 
 from random import randint, choice
 from re import search
-from string import ascii_uppercase as uppercase
+from string import ascii_lowercase as alphabet
 from threading import Thread
 
 
@@ -168,7 +168,7 @@ def set_safe():
 
 #builds random ascii string
 def buildblock():
-    return(''.join(choice(uppercase) for _ in range(randint(3, 10))))
+    return(''.join(choice(alphabet) for _ in range(randint(3, 10))))
 
 
 def usage():
