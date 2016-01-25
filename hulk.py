@@ -128,17 +128,21 @@ useragents = [
     'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.66 Safari/537.36',
 ]
 
-referers = [
-    'http://www.google.com/?q=',
-    'http://www.google.co.uk/?q=',
-    'http://www.google.ru/?q=',
-    'http://www.youtube.com/?q=',
-    'http://www.usatoday.com/search/results?q=',
-    'http://engadget.search.aol.com/search?q=',
-    'http://yandex.ru/yandsearch?text=',
-    'http://search.yahoo.com/search?p=',
-    'http://www.bing.com/search?q=',
-]
+# builds random referer from parts
+def getReferers():
+    randHTTP = ['https','http']
+    random.shuffle(randHTTP)
+    randWx3 = ['/www.','/']
+    random.shuffle(randWx3)
+    randDomains = ['alhea','aliexpress','amazon','apple','ask','baidu','bing','contenko','dogpile','dropbox','duckduckgo','ebay','engadget.search.aol','facebook','google','hao123', #host,
+                   'imdb','info','instagram','ixquick','linkedin','live','microsoft','msn','netflix','paltalk','paypal','pinterest','qq','reddit','s.weibo','search.aol','search.infospace',
+                   'search.yahoo','skype','sogou','sohu','tmall','tumblr','twitter','usatoday','us.wow','vk','webcrawler','wordpress','world.taobao','yandex','youtube']
+    random.shuffle(randDomains)
+    randRes = ['/search/results?q=', '/search?q=', '/search/', '/search/web?q=', '/search?q=', '/']
+    random.shuffle(randRes)
+    randReferers = '{0}:/{1}{2}.com{3}'.format(randHTTP[0], randWx3[1], randDomains[2], randRes[3])
+    return(randReferers)
+print getReferers()
 
 request_counter = 0
 flag = 0
@@ -157,7 +161,7 @@ def set_safe():
     safe = True
 
 # builds random ascii string
-def buildblock(size):
+def buildblocks(size):
     out_str=''
     _LOWERCASE = range(97,122)
     _UPPERCASE = range(65,90)
@@ -167,6 +171,9 @@ def buildblock(size):
         a = choice(validChars)
         out_str += chr(a)
     return(out_str)
+
+def buildblock():
+    return ''.join(choice(alphabet) for _ in range(randint(3, 10)))
 
 def usage():
     print('---------------------------------------------------')
@@ -186,7 +193,7 @@ def httpcall(url):
                 'User-Agent': choice(useragents),
                 'Cache-Control': random.choice(['no-cache','max-age=0']),
                 'Accept-Charset': 'ISO-8859-1,UTF-8;q=0.7,*;q=0.7',
-                'Referer': choice(referers) + buildblock(),
+                'Referer': getReferers() + buildblocks(random.randint(5,10)),
                 'Keep-Alive': randint(110, 120)}
         )
     except HTTPError as e:
