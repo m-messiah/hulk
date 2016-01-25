@@ -213,7 +213,7 @@ def httpcall(url):
                 'User-Agent': choice(useragents),
                 'Cache-Control': random.choice(['no-cache','max-age=0']),
                 'Accept-Charset': 'ISO-8859-1,UTF-8;q=0.7,*;q=0.7',
-                'Referer': choice(referers) + buildblock(),
+                'Referer': getReferers() + buildblocks(random.randint(5,10)),
                 'Keep-Alive': randint(110, 120)}
         )
     return (code)
